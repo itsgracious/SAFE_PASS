@@ -295,3 +295,46 @@ case. Time-to-locate is the metric that matters to the church, not model metrics
 
 Nothing here blocks on the P1/P2 deadline (29 Oct) - Gates 0-1 need no footage and can
 be done in parallel any time.
+
+---
+
+## Appendix: 1-week sprint plan (real constraint: site visit Saturday, 8 past Sundays available, next day is Sunday)
+
+Day 0 (Saturday, on site):
+  1. One-page signed authorization; confirm signage.
+  2. Camera inventory per template + photograph NVR clock next to an NTP-synced phone
+     (instant per-camera skew record). Note continuous vs motion-triggered, any camera
+     moved in the last 8 weeks.
+  3. Floor plan coordinates, laser-measured walking distances, self-timed routes at
+     slow/normal/brisk pace (church population -> expect v_min ~ 0.5 m/s).
+  4. Frontal-face test per camera (walk toward it from ~3 m) - identifies the real
+     enrollment cameras. Overlap map (retro-sync tool for old Sundays). Blind-spot map.
+  5. START the NVR export before leaving: most recent Sunday first, service hours only
+     if windowed export exists (~326 GB per 24 h Sunday at 8 cams/1080p; 06:00-14:00
+     windows cut it to ~650 GB total for 8 Sundays). Bring a 4 TB USB 3 drive.
+  6. Arrange tomorrow's volunteer drill (2-3 consenting adults + 1 logger, after the
+     last mass).
+
+Day 1 (Sunday):
+  1. Let the services record naturally - that is the learning data.
+  2. After the last mass, ~60 min drill:
+     - Phone-clock trick: show a running NTP-synced seconds display to EVERY camera
+       (start and end of drill) - measures tomorrow's skew AND anchors ground truth.
+     - Wave test for camera pairs without a shared view.
+     - Routes x 2-3 repeats each, logger timestamps every camera enter/exit:
+       normal, blind-spot route, double-back, slow shuffle, brisk walk.
+     - Distinctive cap/scarf per volunteer for fast manual review.
+  3. Arrange tonight's export of Sunday.
+
+Day 2 (Mon): ingest; build venue graph from survey; P1/P2 QC pass on one camera-hour.
+Day 3 (Tue): full P1/P2 run; strict-threshold linking -> first learned model; validate
+    against drill ground truth.
+Day 4 (Wed): iterate linking with learned model; refit; validate forecaster on the
+    drill's blind-spot and double-back routes; set clock_skew_tolerance from measurements.
+Day 5 (Thu): end-to-end case drill with a Sunday volunteer as the "missing person";
+    measure time-to-locate. This is the demo.
+Day 6 (Fri): P4 dashboard integration (stubs are the contract); write real-data report.
+Day 7 (Sat): buffer, rehearse.
+
+Cut in one week: live RTSP, per-event models, full 8-Sunday learning (2-3 recent
+Sundays suffice), full E1-E6 re-run on real data (drill-based validation replaces it).
