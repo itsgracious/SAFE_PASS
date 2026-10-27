@@ -208,22 +208,53 @@ def test_multiview_synthesis():
     print("  [PASS] Multi-view synthesis tests passed")
 
 
+def test_distillation_pipeline():
+    """Test StudentCCTVFaceNet architecture and distillation loss."""
+    import torch
+    from face.distillation import StudentCCTVFaceNet, DistillationLoss, SurveillanceDegradation
+
+    # 1. Forward pass
+    student = StudentCCTVFaceNet(embedding_dim=512)
+    student.eval()
+    dummy = torch.randn(2, 3, 112, 112)
+    embs = student(dummy)
+    assert embs.shape == (2, 512), f"Expected (2, 512), got {embs.shape}"
+    norms = torch.norm(embs, p=2, dim=1)
+    assert torch.allclose(norms, torch.ones(2), atol=1e-4)
+
+    # 2. Degradation
+    degrader = SurveillanceDegradation(target_size=112)
+    sample = np.full((112, 112, 3), 150, dtype=np.uint8)
+    degraded = degrader(sample)
+    assert degraded.shape == (112, 112, 3)
+
+    # 3. Loss
+    criterion = DistillationLoss()
+    loss = criterion(embs, embs)
+    assert abs(loss.item()) < 1e-4
+
+    print("  [PASS] Distillation pipeline tests passed")
+
+
 def main():
     print("=" * 60)
     print("  SAFEPASS P1 Face Pipeline -- Smoke Test")
     print("=" * 60)
 
-    print("\n[1/4] Quality Scoring")
+    print("\n[1/5] Quality Scoring")
     test_quality_scoring()
 
-    print("\n[2/4] Feature Extractor")
+    print("\n[2/5] Feature Extractor")
     test_extractor()
 
-    print("\n[3/4] Degradation Tracking")
+    print("\n[3/5] Degradation Tracking")
     test_degradation_tracking()
 
-    print("\n[4/4] Multi-View Synthesis & Enrollment")
+    print("\n[4/5] Multi-View Synthesis & Enrollment")
     test_multiview_synthesis()
+
+    print("\n[5/5] Surveillance Knowledge Distillation")
+    test_distillation_pipeline()
 
     print("\n" + "=" * 60)
     print("  ALL P1 TESTS PASSED [PASS]")
@@ -232,4 +263,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 

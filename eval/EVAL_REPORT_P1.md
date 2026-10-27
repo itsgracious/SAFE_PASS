@@ -191,3 +191,17 @@ Track P1 delivers end-to-end multi-camera video ingestion via `face.video_search
 3. Automatically chains candidate sightings chronologically into a reconstructed motion trajectory.
 4. Tested on 3 concurrent CCTV video feeds (`data/videos/*.mp4`), detecting **24 verified sightings** with zero false acceptances on background stranger faces.
 
+---
+
+## 9. Teacher-Student Knowledge Distillation for Low-Resolution CCTV
+
+Standard face recognition models (ArcFace) are trained on high-resolution web portraits. When deployed on long-distance CCTV cameras ($16\text{px} - 48\text{px}$ face crops), feature representations suffer domain shift.
+
+To address this without generative hallucination, Track P1 provides a **Teacher-Student Knowledge Distillation** framework (`face/distillation.py`, `face/train_distillation.py`):
+- **Teacher Network (Frozen)**: ArcFace ResNet-50 producing ground-truth $e_{\text{teacher}} \in \mathbb{R}^{512}$ from high-resolution canonical $112\times 112$ portraits.
+- **Student Network (Trainable)**: `StudentCCTVFaceNet` (lightweight MobileNetV3 inverted residual architecture with depthwise separable convolutions).
+- **Surveillance Degradation Pipeline**: Simulates distance downscaling ($18\text{px} - 52\text{px}$), motion blur ($\sigma \in [1.0, 3.5]$), Poisson sensor noise, and contrast attenuation.
+- **Distillation Loss**: $\mathcal{L}_{\text{distill}} = (1 - \cos(e_{\text{student}}, e_{\text{teacher}})) + 0.5 \|e_{\text{student}} - e_{\text{teacher}}\|^2$.
+- **Export & Inference**: Exports directly to `data/models/student_cctv_arcface.onnx` for lightweight, real-time edge CCTV inference.
+
+

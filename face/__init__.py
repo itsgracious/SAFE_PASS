@@ -26,6 +26,9 @@ def __getattr__(name: str):
     if name == "VideoSearchEngine":
         from face.video_search import VideoSearchEngine
         return VideoSearchEngine
+    if name in ("StudentCCTVFaceNet", "SurveillanceDegradation"):
+        from face.distillation import StudentCCTVFaceNet, SurveillanceDegradation
+        return StudentCCTVFaceNet if name == "StudentCCTVFaceNet" else SurveillanceDegradation
     raise AttributeError(f"module 'face' has no attribute '{name}'")
 
 
@@ -43,6 +46,9 @@ __all__ = [
     "MultiViewGalleryItem",
     "MultiViewEnrollmentEngine",
     "VideoSearchEngine",
+    "StudentCCTVFaceNet",
+    "SurveillanceDegradation",
 ]
+
 
 
