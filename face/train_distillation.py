@@ -134,6 +134,8 @@ def train_distillation(
     epochs: int = 5,
     batch_size: int = 16,
     lr: float = 1e-3,
+    max_images: int = 1000,
+    resume: bool = True,
     output_dir: str = "data/models",
     results_path: str = "eval/results_distillation.json",
 ):
@@ -150,10 +152,10 @@ def train_distillation(
     print("[Teacher] Frozen ArcFace ResNet-50 loaded.")
 
     # 2. Discover Images
-    image_paths = discover_training_images(dataset_dir)
+    image_paths = discover_training_images(dataset_dir, max_images=max_images)
     if not image_paths:
         raise ValueError(f"No face images found in {dataset_dir} or data/samples!")
-    print(f"[Dataset] Found {len(image_paths)} training face images.")
+    print(f"[Dataset] Found {len(image_paths)} training face images (max_images={max_images}).")
 
     # Split train / validation (85% / 15%)
     n_train = max(int(0.85 * len(image_paths)), 1)
@@ -175,14 +177,22 @@ def train_distillation(
     )
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
-
     # 3. Initialize Student Model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"[Student] Initializing StudentCCTVFaceNet on device: {device}")
     student = StudentCCTVFaceNet(embedding_dim=512).to(device)
 
+    pt_existing = os.path.join(output_dir, "student_cctv.pt")
+    if resume and os.path.exists(pt_existing):
+        try:
+            student.load_state_dict(torch.load(pt_existing, map_location=device, weights_only=True))
+            print(f"[Student] Resumed weights from existing checkpoint: {pt_existing}")
+        except Exception as e:
+            print(f"[Student] Note: starting fresh ({e})")
+
     # Optimizer & Scheduler
     optimizer = torch.optim.AdamW(student.parameters(), lr=lr, weight_decay=1e-4)
+
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-5)
     criterion = DistillationLoss(mse_weight=0.5)
 
@@ -345,8 +355,11 @@ def main():
     parser.add_argument("--epochs", type=int, default=5, help="Number of distillation training epochs")
     parser.add_argument("--batch_size", type=int, default=16, help="Batch size")
     parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate")
+    parser.add_argument("--max_images", type=int, default=1000, help="Maximum face images to use from dataset")
     parser.add_argument("--output_dir", type=str, default="data/models", help="Output directory for saved models")
     parser.add_argument("--export_only", action="store_true", help="Only export existing PyTorch weights to ONNX")
+    parser.add_argument("--no_resume", dest="resume", action="store_false", help="Train from scratch without loading existing checkpoint")
+    parser.set_defaults(resume=True)
     args = parser.parse_args()
 
     if args.export_only:
@@ -360,6 +373,8 @@ def main():
             epochs=args.epochs,
             batch_size=args.batch_size,
             lr=args.lr,
+            max_images=args.max_images,
+            resume=args.resume,
             output_dir=args.output_dir,
         )
 

@@ -2,12 +2,12 @@
   "framework": "Teacher-Student Knowledge Distillation (LRFR)",
   "teacher_backbone": "ArcFace ResNet-50 (Frozen)",
   "student_backbone": "StudentCCTVFaceNet (MobileNetV3 Inverted Residuals)",
-  "epochs": 1,
-  "train_samples": 425,
-  "val_samples": 75,
-  "training_time_seconds": 25.74,
-  "final_train_similarity": 0.4008,
-  "final_val_cctv_similarity": 0.7791,
+  "epochs": 5,
+  "train_samples": 850,
+  "val_samples": 150,
+  "training_time_seconds": 220.58,
+  "final_train_similarity": 0.6882,
+  "final_val_cctv_similarity": 0.7359,
   "output_onnx": "data/models\\student_cctv_arcface.onnx",
   "output_pt": "data/models\\student_cctv.pt"
 }
